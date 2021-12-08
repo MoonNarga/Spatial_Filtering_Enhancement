@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
-	"imageProcessing/process"
+	. "imageProcessing/process"
 )
 
 func main() {
-	im, _, err := process.ReadImage("./flower_gray.JPG")
+	im, _, err := ReadImage("./flower_gray.JPG")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	process.SaveJPEG(process.SetColor(im), "./1.jpg")
+	SaveJPEG(SetColor(*RGBA2Gray(im)), "./1.jpg")
 }

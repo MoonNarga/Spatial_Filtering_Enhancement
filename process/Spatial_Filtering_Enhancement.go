@@ -58,15 +58,14 @@ func RGBA2Gray(im image.Image) *image.Gray {
 	return imgray
 }
 
-func SetColor(im image.Image) *image.RGBA {
+func SetColor(im image.Gray) *image.RGBA {
 	bounds := im.Bounds()
 	imRGBA := image.NewRGBA(bounds)
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			
-			r, g, b, _ := im.At(x, y).RGBA()
-			r = r >> 8
-			g = g >> 8
+			Y := im.At(x, y)
+			r = Y >> 8
+			g = Y >> 8
 			b = b >> 8
 			Y_YUV := uint8((float32(r)*299 + float32(g)*587 + float32(b)*114) / 1000)
 			imRGBA.Set(x, y, color.Gray{Y_YUV})
