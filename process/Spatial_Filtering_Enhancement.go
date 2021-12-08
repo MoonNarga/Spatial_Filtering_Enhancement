@@ -3,6 +3,7 @@ package process
 import (
 	"bufio"
 	"encoding/base64"
+	"fmt"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -64,11 +65,10 @@ func SetColor(im image.Gray) *image.RGBA {
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			Y := im.At(x, y)
-			r = Y >> 8
-			g = Y >> 8
-			b = b >> 8
-			Y_YUV := uint8((float32(r)*299 + float32(g)*587 + float32(b)*114) / 1000)
-			imRGBA.Set(x, y, color.Gray{Y_YUV})
+			r, g, b, a := Y.RGBA()
+			fmt.Println(Y, r, g, b, a)
+			// Y_YUV := uint8((float32(r)*299 + float32(g)*587 + float32(b)*114) / 1000)
+			imRGBA.Set(x, y, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
 		}
 	}
 	return imRGBA
