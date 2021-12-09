@@ -12,5 +12,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	SaveJPEG(SetColor(*RGBA2Gray(im)), "./1.jpg")
+	SaveJPEG(FakeColor(*RGBA2Gray(im)), "./1.jpg")
 }
