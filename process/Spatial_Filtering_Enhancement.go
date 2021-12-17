@@ -51,7 +51,7 @@ func RGBA2Gray(im image.Image) *image.Gray {
 			r = r >> 8
 			g = g >> 8
 			b = b >> 8
-			Y_YUV := uint8((float32(r)*299 + float32(g)*587 + float32(b)*114) / 1000)
+			Y_YUV := uint8((float32(uint8(r))*299 + float32(uint8(g))*587 + float32(uint8(b))*114) / 1000)
 			imgray.Set(x, y, color.Gray{Y_YUV})
 		}
 	}
@@ -65,6 +65,9 @@ func FakeColor(im image.Gray) *image.RGBA {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			Y := im.At(x, y)
 			r, g, b, a := Y.RGBA()
+			r = r >> 8
+			g = g >> 8
+			b = b >> 8
 			imRGBA.Set(x, y, color.RGBA{uint8(r + 5990), uint8(g + 1800), uint8(b + 3250), uint8(a)})
 		}
 	}
