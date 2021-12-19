@@ -8,7 +8,10 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"math"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func ShowImage(m image.Image) {
@@ -72,4 +75,21 @@ func FakeColor(im image.Gray) *image.RGBA {
 		}
 	}
 	return imRGBA
+}
+
+func GenerateGaussNoise(im image.Gray, mean, sigma float64) *image.Gray {
+	rand.Seed(time.Now().UnixNano())
+	XA, XB := rand.Intn(math.MaxInt), rand.Intn(math.MaxInt)
+	bounds := im.Bounds()
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			XA = (XA * 2 + 51) % 100
+			XB = (XB * 2 + 51) % 100
+			Y := im.At(x, y)
+			g, _, _, _ := Y.RGBA()
+			g = g >> 8
+			im.Set(x, y, color.Gray{uint8(g + 5990)})
+		}
+	}
+	return &im
 }

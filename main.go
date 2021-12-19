@@ -12,5 +12,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	SaveJPEG(RGBA2Gray(im), "./1.jpg")
+	SaveJPEG(GenerateGaussNoise(*RGBA2Gray(im), 0, 1), "./1.jpg")
 }
