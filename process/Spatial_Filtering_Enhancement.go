@@ -11,6 +11,8 @@ import (
 	"math/rand"
 	"os"
 	"time"
+
+	"gocv.io/x/gocv"
 )
 
 func ShowImage(m image.Image) {
@@ -93,6 +95,33 @@ func GenerateGaussNoise(im image.Gray, mean, sigma float64) (noise, res *image.G
 	return noise, &im
 }
 
-func GaussianFilter(im image.Gray, tsize int) *image.Gray {
+func GenerateSaltAndPepperNoise(im image.Gray) (noise, res *image.Gray) {
+	rand.Seed(time.Now().UnixNano())
+	bounds := im.Bounds()
+	noise = image.NewGray(bounds)
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			n := uint8(rand.Intn(255))
+			if n > 230 {
+				noise.Set(x, y, color.Gray{255})
+				im.Set(x, y, color.Gray{255})
+			} else if n < 30 {
+				noise.Set(x, y, color.Gray{0})
+				im.Set(x, y, color.Gray{0})
+			}
+		}
+	}
+	return noise, &im
+}
 
+func GaussianFilter(src gocv.Mat, ksize int) *gocv.Mat {
+	dst := gocv.NewMat()
+	gocv.GaussianBlur(src, &dst, image.Point{X: ksize, Y: ksize}, 0, 0, gocv.BorderDefault)
+	return &dst
+}
+
+func CustomFilter(src gocv.Mat, kernel gocv.Mat) *gocv.Mat {
+	dst := gocv.NewMat()
+	gocv.Filter2D(src, &dst, gocv.MatTypeCV8UC1, kernel, image.Point{-1, -1}, -1, gocv.BorderDefault)
+	return &dst
 }
