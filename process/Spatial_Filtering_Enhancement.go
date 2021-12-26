@@ -125,3 +125,10 @@ func CustomFilter(src gocv.Mat, kernel gocv.Mat) *gocv.Mat {
 	gocv.Filter2D(src, &dst, gocv.MatTypeCV8UC1, kernel, image.Point{-1, -1}, -1, gocv.BorderDefault)
 	return &dst
 }
+
+func DFTtrans(src gocv.Mat) (*gocv.Mat, *gocv.Mat) {
+	high, low := gocv.NewMat(), gocv.NewMat()
+	gocv.DFT(src, &high, gocv.DftComplexOutput)
+	gocv.DFT(src, &low, gocv.DftComplexOutput)
+	return &high, &low
+}
