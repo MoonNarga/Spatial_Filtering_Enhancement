@@ -25,11 +25,14 @@ class imageProcess():
         src = cv.imread("./flowerGray.jpg", cv.IMREAD_GRAYSCALE)
         dft = cv.dft(np.float32(src), flags = cv.DFT_COMPLEX_OUTPUT)
         dft_shift = np.fft.fftshift(dft)
-        magnitude_spectrum = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
-        plt.subplot(121),plt.imshow(src, cmap = 'gray')
+        magnitude_spectrum_high = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
+        magnitude_spectrum_low = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
+        plt.subplot(131),plt.imshow(src, cmap = 'gray')
         plt.title('Input Image'), plt.xticks([]), plt.yticks([])
-        plt.subplot(122),plt.imshow(magnitude_spectrum, cmap = 'gray')
-        plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+        plt.subplot(132),plt.imshow(magnitude_spectrum_high, cmap = 'gray')
+        plt.title('Magnitude Spectrum_high'), plt.xticks([]), plt.yticks([])
+        plt.subplot(133),plt.imshow(magnitude_spectrum_low, cmap = 'gray')
+        plt.title('Magnitude Spectrum_low'), plt.xticks([]), plt.yticks([])
         plt.show()
 
 if __name__ == '__main__':
