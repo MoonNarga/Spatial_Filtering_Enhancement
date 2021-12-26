@@ -4,37 +4,37 @@ from matplotlib import pyplot as plt
 
 class imageProcess():
 
-    def sharpen(self):
-        src = cv.imread("./flowerGray.jpg", cv.IMREAD_GRAYSCALE)
-        window1 = cv.namedWindow('1', cv.WINDOW_NORMAL)
-        window2 = cv.namedWindow('2', cv.WINDOW_NORMAL)
-        window3 = cv.namedWindow('3', cv.WINDOW_NORMAL)
-        window4 = cv.namedWindow('4', cv.WINDOW_NORMAL)
-        kernal1 = np.array([[-2, -1, 0], [-1, 0, 1], [0, 1, 2]], np.float64)
-        kernal2 = np.array([[0, -1, -2], [1, 0, -1], [2, 1, 0]], np.float64)
-        dst1 = cv.filter2D(src, -1, kernal1)
-        dst2 = cv.filter2D(src, -1, kernal2)
-        dst3 = dst1 + dst2
-        cv.imshow('1', src)
-        cv.imshow('2', dst1)
-        cv.imshow('3', dst2)
-        cv.imshow('4', dst3)
-        cv.waitKey(0)
+    def newKernelFromList(self, klist):
+        return np.array(klist, np.float64)
 
-    def DFTtrans(self):
-        src = cv.imread("./flowerGray.jpg", cv.IMREAD_GRAYSCALE)
+    def sharpen(self, src, klist):
+        kernel = imageProcess.newKernelFromList(self, klist)
+        dst = cv.filter2D(src, -1, kernel)
+        return dst
+
+    def dft(self, src):
         dft = cv.dft(np.float32(src), flags = cv.DFT_COMPLEX_OUTPUT)
         dft_shift = np.fft.fftshift(dft)
-        magnitude_spectrum_high = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
-        magnitude_spectrum_low = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
-        plt.subplot(131),plt.imshow(src, cmap = 'gray')
-        plt.title('Input Image'), plt.xticks([]), plt.yticks([])
-        plt.subplot(132),plt.imshow(magnitude_spectrum_high, cmap = 'gray')
-        plt.title('Magnitude Spectrum_high'), plt.xticks([]), plt.yticks([])
-        plt.subplot(133),plt.imshow(magnitude_spectrum_low, cmap = 'gray')
-        plt.title('Magnitude Spectrum_low'), plt.xticks([]), plt.yticks([])
-        plt.show()
+        return dft_shift
 
-if __name__ == '__main__':
-    ip = imageProcess()
-    ip.DFTtrans()
+    def magnitude_spectrum(self, src):
+        dft_shift = imageProcess.dft(self, src)
+        magnitude_spectrum = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
+        return magnitude_spectrum
+
+    def addMask(self, src, mode):
+        dft_shift = imageProcess.dft(self, src)
+        row, col = src.shape
+        crow = int(row / 2)
+        ccol = int(col / 2)
+        if mode == 'high':
+            mask = np.ones((row, col, 2), np.uint8)
+            mask[crow-25:crow+25, ccol-25:ccol+25] = 0
+        if mode == 'low':
+            mask = np.zeros((row, col, 2), np.uint8)
+            mask[crow-10:crow+10, ccol-10:ccol+10] = 1
+        fshift = dft_shift*mask
+        f_ishift = np.fft.ifftshift(fshift)
+        img_back = cv.idft(f_ishift)
+        img_back = cv.magnitude(img_back[:,:,0],img_back[:,:,1])
+        return img_back
