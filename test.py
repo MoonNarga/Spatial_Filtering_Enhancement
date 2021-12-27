@@ -37,7 +37,18 @@ class test():
         plt.title('Magnitude Spectrum_low'), plt.xticks([]), plt.yticks([])
         plt.show()
 
+    def dctTest(self, src):
+        src = cv.imread(src, cv.IMREAD_GRAYSCALE)
+        row, col = src.shape
+        rrow, ccol = int(row / 8), int(col / 8)
+        vdata = np.array_split(src, ccol, axis=0)
+        for i in range(0, ccol):
+            blockdata = np.array_split(vdata[i], rrow, axis=1)
+            for j in range(0, rrow):
+                block = blockdata[j]
+                
+
 if __name__ == '__main__':
     src = "./flowerGray.jpg"
     test = test()
-    test.dftTest(src)
+    test.dctTest(src)
