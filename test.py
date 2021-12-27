@@ -44,6 +44,8 @@ class test():
         dctTrans = np.ndarray(src.shape,dtype=np.float64)
         row, col = src.shape
         rrow, ccol = int(row / 8), int(col / 8)
+        mask = np.zeros((8, 8), dtype=np.float64)
+        mask[:3, :3] = [[1, 1, 1], [1, 1, 0], [1, 0, 0]]
         for i in range(0, rrow):
             for j in range(0, ccol):
                 block = src[8*i:8*(i+1), 8*j:8*(j+1)]
@@ -51,7 +53,7 @@ class test():
                 # plt.title('Input block'), plt.xticks([]), plt.yticks([])
                 Yb = cv.dct(block.astype(np.float64))
                 dct[8*i:8*(i+1), 8*j:8*(j+1)] = Yb
-                Yb += 100
+                Yb *= mask
                 dctTrans[8*i:8*(i+1), 8*j:8*(j+1)] = Yb
                 # plt.subplot(132),plt.imshow(Yb, cmap = 'gray')
                 # plt.title('dct'), plt.xticks([]), plt.yticks([])
