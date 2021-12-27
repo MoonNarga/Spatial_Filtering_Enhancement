@@ -1,9 +1,9 @@
-import imageProcess
+import imageprocess
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
 
-ip = imageProcess.imageProcess()
+ip = imageprocess.imageProcess()
 
 class test():
     
@@ -39,14 +39,37 @@ class test():
 
     def dctTest(self, src):
         src = cv.imread(src, cv.IMREAD_GRAYSCALE)
+        imgTrans = np.ndarray(src.shape,dtype=np.float64)
+        dct = np.ndarray(src.shape,dtype=np.float64)
+        dctTrans = np.ndarray(src.shape,dtype=np.float64)
         row, col = src.shape
         rrow, ccol = int(row / 8), int(col / 8)
-        vdata = np.array_split(src, ccol, axis=0)
-        for i in range(0, ccol):
-            blockdata = np.array_split(vdata[i], rrow, axis=1)
-            for j in range(0, rrow):
-                block = blockdata[j]
-                
+        for i in range(0, rrow):
+            for j in range(0, ccol):
+                block = src[8*i:8*(i+1), 8*j:8*(j+1)]
+                # plt.subplot(131),plt.imshow(block, cmap = 'gray')
+                # plt.title('Input block'), plt.xticks([]), plt.yticks([])
+                Yb = cv.dct(block.astype(np.float64))
+                dct[8*i:8*(i+1), 8*j:8*(j+1)] = Yb
+                Yb += 100
+                dctTrans[8*i:8*(i+1), 8*j:8*(j+1)] = Yb
+                # plt.subplot(132),plt.imshow(Yb, cmap = 'gray')
+                # plt.title('dct'), plt.xticks([]), plt.yticks([])
+                iblock = cv.idct(Yb)
+                imgTrans[8*i:8*(i+1), 8*j:8*(j+1)] = iblock
+                # plt.subplot(133),plt.imshow(iblock, cmap = 'gray')
+                # plt.title('idct'), plt.xticks([]), plt.yticks([])
+                # plt.show()
+        plt.subplot(221),plt.imshow(src, cmap='gray')
+        plt.title('src'), plt.xticks([]), plt.yticks([])
+        plt.subplot(222),plt.imshow(dct, cmap='gray')
+        plt.title('dct'), plt.xticks([]), plt.yticks([])
+        plt.subplot(223),plt.imshow(dctTrans, cmap='gray')
+        plt.title('dctTrans'), plt.xticks([]), plt.yticks([])
+        plt.subplot(224),plt.imshow(imgTrans, cmap='gray')
+        plt.title('imgTrans'), plt.xticks([]), plt.yticks([])
+        plt.show()
+
 
 if __name__ == '__main__':
     src = "./flowerGray.jpg"
