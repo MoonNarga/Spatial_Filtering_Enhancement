@@ -95,21 +95,29 @@ class test():
                 else:
                     imgcompress[i][j] = predict[i*col+j]
         runlength = np.empty(shape=(0), dtype=np.int16)
-        
         temp = predict[0]
         count = 1
+        flag = False
         for i in range(1, row*col):
-            if (count == 31):
-                code = np.int16(0)
-                code |= (31 << 9)
-                code |= temp
             if (predict[i] != temp):
-                runlength.append()
-                temp = predict[i]
-                count = 1
+                code = np.int16(0)
+                code |= (count << 9)
+                if (temp < 0):
+                    code |= 0x0100
+                code |= abs(temp)
+                flag = True
             else:
                 count += 1
-            if (i == row*col):
+            if (count == 127):
+                code = np.int16(0)
+                code |= (count << 9)
+                if (temp < 0):
+                    code |= 0x0100
+                code |= abs(temp)
+                flag = True
+            if (flag == True):
+                if (i != row*col):
+
 
     def segmentation(self, src):
         dict = {}
