@@ -40,29 +40,9 @@ class test():
 
     def dctTest(self, src):
         src = cv.imread(src, cv.IMREAD_GRAYSCALE)
-        imgTrans = np.ndarray(src.shape, dtype=np.float64)
-        dct = np.ndarray(src.shape, dtype=np.float64)
-        dctTrans = np.ndarray(src.shape, dtype=np.float64)
-        row, col = src.shape
-        rrow, ccol = int(row / 8), int(col / 8)
-        mask = np.zeros((8, 8), dtype=np.float64)
-        mask[:3, :3] = [[1, 1, 1], [1, 1, 0], [1, 0, 0]]
-        for i in range(0, rrow):
-            for j in range(0, ccol):
-                block = src[8*i:8*(i+1), 8*j:8*(j+1)]
-                # plt.subplot(131),plt.imshow(block, cmap = 'gray')
-                # plt.title('Input block'), plt.xticks([]), plt.yticks([])
-                Yb = cv.dct(block.astype(np.float64))
-                dct[8*i:8*(i+1), 8*j:8*(j+1)] = Yb
-                Yb *= mask
-                dctTrans[8*i:8*(i+1), 8*j:8*(j+1)] = Yb
-                # plt.subplot(132),plt.imshow(Yb, cmap = 'gray')
-                # plt.title('dct'), plt.xticks([]), plt.yticks([])
-                iblock = cv.idct(Yb)
-                imgTrans[8*i:8*(i+1), 8*j:8*(j+1)] = iblock
-                # plt.subplot(133),plt.imshow(iblock, cmap = 'gray')
-                # plt.title('idct'), plt.xticks([]), plt.yticks([])
-                # plt.show()
+        quantization_table = np.zeros((8, 8), dtype=np.float64)
+        quantization_table[:3, :3] = [[1, 1, 1], [1, 1, 0], [1, 0, 0]]
+        dct, dctTrans, imgTrans = ip.dct(src, quantization_table)
         plt.subplot(221), plt.imshow(src, cmap='gray')
         plt.title('src'), plt.xticks([]), plt.yticks([])
         plt.subplot(222), plt.imshow(dct, cmap='gray')
@@ -72,161 +52,43 @@ class test():
         plt.subplot(224), plt.imshow(imgTrans, cmap='gray')
         plt.title('imgTrans'), plt.xticks([]), plt.yticks([])
         plt.show()
-
-    def encode(self, src):
-        src = cv.imread(src, cv.IMREAD_GRAYSCALE)
-        src = src[:256, :256]
-        row, col = src.shape
-        stretching = np.ndarray((row*col), dtype=np.uint8)
-        predict = np.ndarray((row*col), dtype=np.int16)
-        for i in range(0, row):
-            for j in range(0, col):
-                stretching[i*col+j] = src[i][j]
-        bef3, bef2, bef1 = 0, 0, 0
-        for i in range(0, row):
-            for j in range(0, col):
-                predict[i*col+j] = np.int16(stretching[i*col+j]) - (np.float32(bef1 )+ (np.float32(bef1) - np.float32(bef3)) / 2)
-                bef3, bef2, bef1 = bef2, bef1, stretching[i*col+j]
-        imgcompress = np.empty(shape=src.shape, dtype=np.uint8)
-        for i in range(0, row):
-            for j in range(0, col):
-                if (predict[i*col+j] < 0):
-                    imgcompress[i][j] = 0
-                else:
-                    imgcompress[i][j] = predict[i*col+j]
-        runlength = np.empty((row*col), dtype=np.int16)
-        codelen = 0
-        temp = predict[0]
-        count = 0
-        for i in range(0, row*col):
-            if (predict[i] == temp):
-                count += 1
-                if (count == 127 or i == row*col):
-                    code = np.int16(0)
-                    code |= (count << 9)
-                    if (temp < 0):
-                        code |= 0x0100
-                    code |= abs(temp)
-                    runlength[codelen] = code
-                    codelen += 1
-                    count = 0
-            else:
-                code = np.int16(0)
-                code |= (count << 9)
-                if (temp < 0):
-                    code |= 0x0100
-                code |= abs(temp)
-                runlength[codelen] = code
-                codelen += 1
-                if (i == row*col):
-                    code = np.int16(0)
-                    code |= (count << 9)
-                    if (predict[i] < 0):
-                        code |= 0x0100
-                    code |= abs(predict[i])
-                    runlength[codelen] = code
-                    codelen += 1
-                else:
-                    temp = predict[i]
-                    count = 1
-        print(src[0])
-        print(predict.reshape(row, col)[0])
-        return runlength, row, col
     
-    def decode(self, runlength, row, col):
-        imgdecode = np.ndarray((row*col), dtype=np.uint8)
-        bef3, bef2, bef1 = 0, 0, 0
-        pos = 0
-        length = runlength.shape[0]
-        for i in range(0, length):
-            code = runlength[i]
-            count = code >> 9
-            value = code & 0x00ff
-            sign = (code & 0x0100) >> 8
-            if (sign == 1):
-                value = -value
-            for i in range(0, count):
-                imgdecode[pos] = value + np.uint8(np.float32(bef1 )+ (np.float32(bef1) - np.float32(bef3)) / 2)
-                bef3, bef2, bef1 = bef2, bef1, np.float32(imgdecode[pos])
-                pos += 1
-        imgdecode = imgdecode.reshape((row, col))
-        print(imgdecode[0])
-        plt.subplot(111), plt.imshow(imgdecode, cmap='gray')
-        plt.title('imgdecode'), plt.xticks([]), plt.yticks([])
+    def encodeTest(self, src):
+        src = cv.imread(src, cv.IMREAD_GRAYSCALE)
+        runlength, imgcompress, row, col = ip.encode(src)
+        imgdecode = ip.decode(runlength, row, col)
+        plt.subplot(131), plt.imshow(src, cmap='gray')
+        plt.title('Src'), plt.xticks([]), plt.yticks([])
+        plt.subplot(132), plt.imshow(imgcompress, cmap='gray')
+        plt.title('Imgcompress'), plt.xticks([]), plt.yticks([])
+        plt.subplot(133), plt.imshow(imgdecode, cmap='gray')
+        plt.title('Imgdecode'), plt.xticks([]), plt.yticks([])
         plt.show()
 
-    def segmentation(self, src):
-        dict = {}
-        img = cv.imread(src)
-        cv.imshow("origin", img)
-        dict['origin'] = img
-        gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        dict['gray'] = gray
-        ret, thresh = cv.threshold(
-            gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
-        dict['thresh'] = thresh
+    def jpegTest(self, src):
+        src = cv.imread(src, cv.IMREAD_GRAYSCALE)
+        quantization_table = np.zeros((8, 8), dtype=np.float64)
+        quantization_table[:3, :3] = [[1, 1, 1], [1, 1, 0], [1, 0, 0]]
+        stretching, row, col, htable, wtable = ip.savelikeJPEG(src, quantization_table)
+        imgload = ip.loadlikeJPEG(stretching, row, col, htable, wtable)
+        plt.subplot(121), plt.imshow(src, cmap='gray')
+        plt.title('ImgSrc'), plt.xticks([]), plt.yticks([])
+        plt.subplot(122), plt.imshow(imgload, cmap='gray')
+        plt.title('Imgload'), plt.xticks([]), plt.yticks([])
+        plt.show()
 
-        # 去掉噪音
-        kernel = np.ones((3, 3), np.uint8)
-        opening = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=2)
-        dict['opening'] = opening
-
-        # 寻找确定的背景
-        sure_bg = cv.dilate(opening, kernel, iterations=3)
-        dict['sure_bg'] = sure_bg
-
-        # 寻找确定的前景区域
-        dist_transform = cv.distanceTransform(opening, cv.DIST_L2, 5)
-        ret, sure_fg = cv.threshold(
-            dist_transform, 0.7 * dist_transform.max(), 255, 0)
-        dict['dist_transform'] = dist_transform
-        dict['sure_fg'] = sure_fg
-
-        # 用背景减前景，得到不确定的区域
-        sure_fg = np.uint8(sure_fg)
-        unknown = cv.subtract(sure_bg, sure_fg)
-        dict['unknown'] = unknown
-
-        # 创建标记（它是一个与原始图像大小相同的数组，但数据类型为 int32）并标记其中的区域。
-        # 标记背景、不确定对象（默认背景为0，其他为1）
-        ret, markers = cv.connectedComponents(sure_fg)
-        dict['markers'] = markers
-
-        # 对所有标签加1，将得到背景为1
-        markers = markers + 1
-
-        # 标记未知区域为0
-        markers[unknown == 255] = 0
-
-        # 应用分水岭算法，然后标记图像，边界区域将被标记为-1
-        markers = cv.watershed(img, markers)
-        img[markers == -1] = [255, 0, 0]
-        cv.imshow("watershed res", img)
-        cv.waitKey(0)
-        cv.destroyAllWindows()
-        dict['marker boundaries'] = markers
-        dict['res'] = img
-
-        size = len(dict)
-        print(size, '\n')
-        for i, key in enumerate(dict):
-            print(i + 1, key, len(list(dict[key].shape)))
-            plt.subplot(3, 4, i + 1)
-            # 由于matplot需要RGB以显示彩色图，而OpenCV是用BGR来表示彩色图的
-            if (len(list(dict[key].shape)) > 2):
-                # 为确保正确显示RGB图，进行颜色空间转换
-                plt.imshow(cv.cvtColor(dict[key], cv.COLOR_BGR2RGB))
-            else:
-                plt.imshow(dict[key])
-            plt.title(key)  # 图片的标题
-            plt.xticks([])  # 去掉x轴的刻度
-            plt.yticks([])  # 去掉y轴的刻度
+    def segmentationTest(self, src):
+        src = cv.imread(src, cv.IMREAD_GRAYSCALE)
+        seg01 = ip.segmentation01(src)
+        plt.subplot(121), plt.imshow(seg01, cmap='gray')
+        plt.title('Segmentation01'), plt.xticks([]), plt.yticks([])
+        segmin = ip.segmentationMin(src)
+        plt.subplot(122), plt.imshow(segmin, cmap='gray')
+        plt.title('SegmentationMin'), plt.xticks([]), plt.yticks([])
         plt.show()
 
 
 if __name__ == '__main__':
-    src = "./lena.jpg"
+    src = "./flowerGray.jpg"
     test = test()
-    encode, row, col = test.encode(src)
-    test.decode(encode, row, col)
-    
+    test.segmentationTest(src)
