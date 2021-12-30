@@ -94,30 +94,66 @@ class test():
                     imgcompress[i][j] = 0
                 else:
                     imgcompress[i][j] = predict[i*col+j]
-        runlength = np.empty(shape=(0), dtype=np.int16)
+        runlength = np.empty((row*col), dtype=np.int16)
+        codelen = 0
         temp = predict[0]
-        count = 1
-        flag = False
-        for i in range(1, row*col):
-            if (predict[i] != temp):
-                code = np.int16(0)
-                code |= (count << 9)
-                if (temp < 0):
-                    code |= 0x0100
-                code |= abs(temp)
-                flag = True
-            else:
+        count = 0
+        for i in range(0, row*col):
+            if (predict[i] == temp):
                 count += 1
-            if (count == 127):
+                if (count == 127 or i == row*col):
+                    code = np.int16(0)
+                    code |= (count << 9)
+                    if (temp < 0):
+                        code |= 0x0100
+                    code |= abs(temp)
+                    runlength[codelen] = code
+                    codelen += 1
+                    count = 0
+            else:
                 code = np.int16(0)
                 code |= (count << 9)
                 if (temp < 0):
                     code |= 0x0100
                 code |= abs(temp)
-                flag = True
-            if (flag == True):
-                if (i != row*col):
-
+                runlength[codelen] = code
+                codelen += 1
+                if (i == row*col):
+                    code = np.int16(0)
+                    code |= (count << 9)
+                    if (predict[i] < 0):
+                        code |= 0x0100
+                    code |= abs(predict[i])
+                    runlength[codelen] = code
+                    codelen += 1
+                else:
+                    temp = predict[i]
+                    count = 1
+        print(src[0])
+        print(predict.reshape(row, col)[0])
+        return runlength, row, col
+    
+    def decode(self, runlength, row, col):
+        imgdecode = np.ndarray((row*col), dtype=np.uint8)
+        bef3, bef2, bef1 = 0, 0, 0
+        pos = 0
+        length = runlength.shape[0]
+        for i in range(0, length):
+            code = runlength[i]
+            count = code >> 9
+            value = code & 0x00ff
+            sign = (code & 0x0100) >> 8
+            if (sign == 1):
+                value = -value
+            for i in range(0, count):
+                imgdecode[pos] = value + np.uint8(np.float32(bef1 )+ (np.float32(bef1) - np.float32(bef3)) / 2)
+                bef3, bef2, bef1 = bef2, bef1, np.float32(imgdecode[pos])
+                pos += 1
+        imgdecode = imgdecode.reshape((row, col))
+        print(imgdecode[0])
+        plt.subplot(111), plt.imshow(imgdecode, cmap='gray')
+        plt.title('imgdecode'), plt.xticks([]), plt.yticks([])
+        plt.show()
 
     def segmentation(self, src):
         dict = {}
@@ -191,4 +227,6 @@ class test():
 if __name__ == '__main__':
     src = "./lena.jpg"
     test = test()
-    test.encode(src)
+    encode, row, col = test.encode(src)
+    test.decode(encode, row, col)
+    
