@@ -126,8 +126,8 @@ func CustomFilter(src gocv.Mat, kernel gocv.Mat) *gocv.Mat {
 	return &dst
 }
 
-func DFTtrans(src gocv.Mat) {
-	high := gocv.NewMatWithSizes(src.Size(), src.Type())
-	gocv.DFT(src, &high, gocv.DftForward)
-	// return &src
+func DFTtrans(src gocv.Mat) *gocv.Mat {
+	high := gocv.NewMatWithSizes(src.Size(), gocv.MatTypeCV64FC1)
+	gocv.DFT(src, &high, gocv.DftComplexOutput)
+	return &high
 }

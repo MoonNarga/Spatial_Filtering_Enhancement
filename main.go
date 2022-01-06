@@ -16,11 +16,11 @@ func main() {
 	defer window2.Close()
 	defer window3.Close()
 	// high := DFTtrans(src)
-	DFTtrans(src)
+	res := DFTtrans(src)
 	// gocv.IMWrite("DFT_High.jpg", *high)
 	// gocv.IMWrite("DFT_Low.jpg", *low)
 	for {
-		window1.IMShow(src)
+		window1.IMShow(*res)
 		// window2.IMShow(*high)
 		// window3.IMShow(*low)
 		if window3.WaitKey(1) >= 0 {
